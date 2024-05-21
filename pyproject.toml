@@ -2,7 +2,7 @@
 requires = ["setuptools", "wheel"]
 
 [project]
-name = "nbs_core"
+name = "nbs-core"
 version = "0.1.0"
 description = "NBS Core Utilities"
 authors = [
