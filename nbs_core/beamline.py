@@ -15,10 +15,11 @@ class BeamlineModel:
         self.manipulators = {}
         self.mirrors = {}
         self.controllers = {}
+        self.vacuum = {}
         self.energy = None
         self.primary_manipulator = None
         self.default_shutter = None
-        self.groups = ["shutters", "gatevalves", "apertures", "pinholes", "gauges", "motors", "detectors", "manipulators", "mirrors", "controllers"]
+        self.groups = ["shutters", "gatevalves", "apertures", "pinholes", "gauges", "motors", "detectors", "manipulators", "mirrors", "controllers", "vacuum"]
         self.roles = ["energy", "primary_manipulator", "default_shutter"]
         self.loadDevices(devices, groups, roles)
 
