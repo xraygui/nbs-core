@@ -24,13 +24,13 @@ def simpleResolver(fullclassname):
     return cls
 
 
-def loadFromConfig(config, instantiateDevice, alias=False, **kwargs):
+def loadFromConfig(config, instantiateDevice, alias=False, namespace=None, **kwargs):
     device_dict = {}
     group_dict = {}
     role_dict = {}
     for device_key, device_info in config.items():
         if device_info.get("_target", "IGNORE") != "IGNORE":
-            device_dict[device_key] = instantiateDevice(device_key, device_info, **kwargs)
+            device_dict[device_key] = instantiateDevice(device_key, device_info, namespace=namespace, **kwargs)
             groups = iterfy(device_info.get("_group", ["misc"]))
             for g in groups:
                 if g not in group_dict:
@@ -51,6 +51,8 @@ def loadFromConfig(config, instantiateDevice, alias=False, **kwargs):
                         for key in device_names[1:]:
                             device = getattr(device, key)
                     device_dict[alias_key] = device
+                    if namespace is not None:
+                        namespace[alias_key] = device
                     groups = iterfy(device_info.get("_group", ["misc"]))
                     for g in groups:
                         if g not in group_dict:
