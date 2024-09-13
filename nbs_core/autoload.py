@@ -24,13 +24,19 @@ def simpleResolver(fullclassname):
     return cls
 
 
-def loadFromConfig(config, instantiateDevice, alias=False, namespace=None, **kwargs):
+def loadFromConfig(
+    config, instantiateDevice, alias=False, namespace=None, load_pass=1, **kwargs
+):
     device_dict = {}
     group_dict = {}
     role_dict = {}
     for device_key, device_info in config.items():
+        if device_info.get("_load_order", 1) != load_pass and load_pass > 0:
+            continue
         if device_info.get("_target", "IGNORE") != "IGNORE":
-            device_dict[device_key] = instantiateDevice(device_key, device_info, namespace=namespace, **kwargs)
+            device_dict[device_key] = instantiateDevice(
+                device_key, device_info, namespace=namespace, **kwargs
+            )
             groups = iterfy(device_info.get("_group", ["misc"]))
             for g in groups:
                 if g not in group_dict:
@@ -41,6 +47,8 @@ def loadFromConfig(config, instantiateDevice, alias=False, namespace=None, **kwa
     # Second pass to create device aliases, a bit clunky
     if alias:
         for alias_key, device_info in config.items():
+            if device_info.get("_load_order", 1) != load_pass:
+                continue
             if "_alias" in device_info:
                 device_key = device_info["_alias"]
                 print(f"Trying to alias {device_key} to {alias_key}")
@@ -63,7 +71,7 @@ def loadFromConfig(config, instantiateDevice, alias=False, namespace=None, **kwa
     return device_dict, group_dict, role_dict
 
 
-def instantiateOphyd(device_key, info, cls=None, namespace=None):
+def instantiateOphyd(device_key, info, cls=None, namespace=None, **kwargs):
     """
     Instantiate a device with given information.
 
@@ -91,14 +99,15 @@ def instantiateOphyd(device_key, info, cls=None, namespace=None):
     else:
         raise KeyError("Could not find '_target' in {}".format(device_info))
 
+    add_to_namespace = device_info.pop("_add_to_ns", True)
+
     popkeys = [key for key in device_info if key.startswith("_")]
     for key in popkeys:
         device_info.pop(key)
 
     name = device_info.pop("name", device_key)
     prefix = device_info.pop("prefix", "")
-    add_to_namespace = device_info.pop("_add_to_ns", True)
-    device = cls(prefix, name=name, **device_info)
+    device = cls(prefix, name=name, **device_info, **kwargs)
 
     if add_to_namespace and namespace is not None:
         namespace[device_key] = device
