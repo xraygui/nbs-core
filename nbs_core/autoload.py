@@ -3,6 +3,49 @@ from .utils import iterfy
 from copy import deepcopy
 
 
+def _find_deferred_devices(config):
+    """
+    Find all deferred devices and their aliases in the config.
+
+    Parameters
+    ----------
+    config : dict
+        The configuration dictionary
+
+    Returns
+    -------
+    set
+        Set of device names that should be deferred
+    dict
+        Filtered config without deferred devices
+    dict
+        Config containing only deferred devices
+    """
+    deferred_devices = set()
+
+    # First find explicitly deferred devices
+    for key, device_config in config.items():
+        if isinstance(device_config, dict) and device_config.get(
+            "_defer_loading", False
+        ):
+            deferred_devices.add(key)
+
+    # Then find aliases of deferred devices
+    for key, device_config in config.items():
+        if isinstance(device_config, dict) and "_alias" in device_config:
+            # Parse the alias path (e.g., "enpossoft.harmonic")
+            alias_parts = device_config["_alias"].split(".")
+            base_device = alias_parts[0]
+            if base_device in deferred_devices:
+                deferred_devices.add(key)
+
+    # Create filtered configs
+    filtered_config = {k: v for k, v in config.items() if k not in deferred_devices}
+    deferred_config = {k: v for k, v in config.items() if k in deferred_devices}
+
+    return deferred_devices, filtered_config, deferred_config
+
+
 def simpleResolver(fullclassname):
     """
     Resolve a full class name to a class object.
@@ -25,7 +68,13 @@ def simpleResolver(fullclassname):
 
 
 def loadFromConfig(
-    config, instantiateDevice, alias=False, namespace=None, load_pass="auto", **kwargs
+    config,
+    instantiateDevice,
+    alias=False,
+    namespace=None,
+    load_pass="auto",
+    filter_deferred=True,
+    **kwargs,
 ):
     """
     Load devices from configuration, optionally handling multiple load passes automatically.
@@ -42,6 +91,8 @@ def loadFromConfig(
         Namespace to add devices to
     load_pass : str or int, optional
         If "auto", automatically handle multiple load passes. If int, load only that pass.
+    filter_deferred : bool, optional
+        Whether to filter out deferred devices and their aliases. Default is True.
     **kwargs : dict
         Additional keyword arguments passed to instantiateDevice
 
@@ -53,6 +104,10 @@ def loadFromConfig(
     device_dict = {}
     group_dict = {}
     role_dict = {}
+
+    # Handle deferred devices if filtering is enabled
+    if filter_deferred:
+        _, config, _ = _find_deferred_devices(config)
 
     if load_pass == "auto":
         # Find the highest load order in the config
@@ -110,6 +165,9 @@ def _load_single_pass(
     """Helper function to load a single pass of devices"""
     for device_key, device_info in config.items():
         if device_info.get("_load_order", 1) != load_pass:
+            continue
+        # Skip deferred devices
+        if device_info.get("_defer_loading", False):
             continue
         if device_info.get("_target", "IGNORE") != "IGNORE":
             device_dict[device_key] = instantiateDevice(
