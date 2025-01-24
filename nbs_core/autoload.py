@@ -67,6 +67,14 @@ def simpleResolver(fullclassname):
     return cls
 
 
+def getMaxLoadPass(config):
+    max_load_order = 1
+    for device_info in config.values():
+        order = device_info.get("_load_order", 1)
+        max_load_order = max(max_load_order, order)
+    return max_load_order
+
+
 def loadFromConfig(
     config,
     instantiateDevice,
@@ -111,10 +119,7 @@ def loadFromConfig(
 
     if load_pass == "auto":
         # Find the highest load order in the config
-        max_load_order = 1
-        for device_info in config.values():
-            order = device_info.get("_load_order", 1)
-            max_load_order = max(max_load_order, order)
+        max_load_order = getMaxLoadPass(config)
         print(f"Number of load passes: {max_load_order}")
         # Load each pass sequentially
         for current_pass in range(1, max_load_order + 1):
