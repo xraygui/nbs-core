@@ -104,7 +104,7 @@ def loadFromConfig(
     device_dict = {}
     group_dict = {}
     role_dict = {}
-
+    print("Loading devices from config dictionary")
     # Handle deferred devices if filtering is enabled
     if filter_deferred:
         _, config, _ = _find_deferred_devices(config)
@@ -115,7 +115,7 @@ def loadFromConfig(
         for device_info in config.values():
             order = device_info.get("_load_order", 1)
             max_load_order = max(max_load_order, order)
-
+        print(f"Number of load passes: {max_load_order}")
         # Load each pass sequentially
         for current_pass in range(1, max_load_order + 1):
             _load_single_pass(
@@ -163,6 +163,7 @@ def _load_single_pass(
     **kwargs,
 ):
     """Helper function to load a single pass of devices"""
+    print(f"Loading devices from config dictionary for pass {load_pass}")
     for device_key, device_info in config.items():
         if device_info.get("_load_order", 1) != load_pass:
             continue
@@ -170,6 +171,7 @@ def _load_single_pass(
         if device_info.get("_defer_loading", False):
             continue
         if device_info.get("_target", "IGNORE") != "IGNORE":
+            print(f"Loading device {device_key}")
             device_dict[device_key] = instantiateDevice(
                 device_key, device_info, namespace=namespace, **kwargs
             )
