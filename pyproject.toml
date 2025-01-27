@@ -1,15 +1,24 @@
 [build-system]
-requires = ["setuptools", "wheel"]
+requires = ["setuptools", "wheel", "setuptools_scm"]
 
 [project]
 name = "nbs-core"
-version = "0.1.0"
 description = "NBS Core Utilities"
 authors = [
-    { email = "ctitus@bnl.gov" },
+    { name = "Charles Titus", email = "ctitus@bnl.gov" },
 ]
 requires-python = ">=3.7"
+dynamic = ["version"]
+readme = "README.md"
+keywords = ["bluesky", "nsls-ii", "beamline"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: Public Domain",
+    "Operating System :: OS Independent",
+    "Intended Audience :: Science/Research"
+]
 
 [project.urls]
 homepage = "https://github.com/xraygui/nbs-core"  # Replace with your project's homepage
 
+[tool.setuptools_scm]
