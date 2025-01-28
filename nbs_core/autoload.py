@@ -217,7 +217,10 @@ def _handle_aliases(load_pass, config, device_dict, group_dict, role_dict, names
 
 def instantiateOphyd(device_key, info, cls=None, namespace=None, **kwargs):
     """
-    Instantiate a device with given information.
+    Instantiate a device with given information. A class is assumed to take
+    a prefix as a positional argument, if it is provided in the info dictionary.
+
+    name is always passed as a keyword, and will be set to the device_key if not provided.
 
     Parameters
     ----------
@@ -250,8 +253,11 @@ def instantiateOphyd(device_key, info, cls=None, namespace=None, **kwargs):
         device_info.pop(key)
 
     name = device_info.pop("name", device_key)
-    prefix = device_info.pop("prefix", "")
-    device = cls(prefix, name=name, **device_info, **kwargs)
+    if "prefix" in device_info:
+        prefix = device_info.pop("prefix")
+        device = cls(prefix, name=name, **device_info, **kwargs)
+    else:
+        device = cls(name=name, **device_info, **kwargs)
 
     if add_to_namespace and namespace is not None:
         namespace[device_key] = device
