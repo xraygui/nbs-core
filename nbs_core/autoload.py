@@ -156,11 +156,12 @@ def loadFromConfig(
             namespace,
             **kwargs,
         )
+        
         if alias:
             _handle_aliases(
                 load_pass, config, device_dict, group_dict, role_dict, namespace
             )
-
+        
     return device_dict, group_dict, role_dict
 
 
