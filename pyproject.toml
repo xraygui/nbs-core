@@ -1,5 +1,6 @@
 [build-system]
-requires = ["setuptools", "wheel", "setuptools_scm"]
+requires = ["hatchling", "hatch-vcs"]
+build-backend = "hatchling.build"
 
 [project]
 name = "nbs-core"
@@ -7,7 +8,7 @@ description = "NBS Core Utilities"
 authors = [
     { name = "Charles Titus", email = "ctitus@bnl.gov" },
 ]
-requires-python = ">=3.7"
+requires-python = ">=3.9"
 dynamic = ["version"]
 readme = "README.md"
 keywords = ["bluesky", "nsls-ii", "beamline"]
@@ -17,8 +18,23 @@ classifiers = [
     "Operating System :: OS Independent",
     "Intended Audience :: Science/Research"
 ]
+dependencies = ['tomli ; python_version < "3.11"']
 
 [project.urls]
-homepage = "https://github.com/xraygui/nbs-core"  # Replace with your project's homepage
+homepage = "https://github.com/xraygui/nbs-core"
 
-[tool.setuptools_scm]
+[tool.hatch.version]
+source = "vcs"
+
+[tool.pixi.workspace]
+channels = ["conda-forge"]
+platforms = ["linux-64"]
+
+[tool.pixi.feature.build.dependencies]
+hatch = "*"
+
+[tool.pixi.feature.build.tasks]
+build = "hatch build"
+
+[tool.pixi.environments]
+build = { features = ["build"], solve-group = "default" }

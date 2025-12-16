@@ -3,7 +3,7 @@ from .utils import iterfy
 from copy import deepcopy
 
 
-def _find_deferred_devices(config):
+def _find_deferred_devices(config, mode=None):
     """
     Find all deferred devices and their aliases in the config.
 
@@ -29,6 +29,10 @@ def _find_deferred_devices(config):
             "_defer_loading", False
         ):
             deferred_devices.add(key)
+        elif mode is not None:
+            device_modes = device_config.get("_modes", [mode])
+            if mode not in device_modes:
+                deferred_devices.add(key)
 
     # Then find aliases of deferred devices
     for key, device_config in config.items():
@@ -82,6 +86,7 @@ def loadFromConfig(
     namespace=None,
     load_pass="auto",
     filter_deferred=True,
+    mode=None,
     **kwargs,
 ):
     """
@@ -101,6 +106,8 @@ def loadFromConfig(
         If "auto", automatically handle multiple load passes. If int, load only that pass.
     filter_deferred : bool, optional
         Whether to filter out deferred devices and their aliases. Default is True.
+    mode: str, optional
+        If a mode is given, only load devices for that mode. Mode-less devices are always loaded.
     **kwargs : dict
         Additional keyword arguments passed to instantiateDevice
 
@@ -115,7 +122,7 @@ def loadFromConfig(
     print("Loading devices from config dictionary")
     # Handle deferred devices if filtering is enabled
     if filter_deferred:
-        _, config, _ = _find_deferred_devices(config)
+        _, config, _ = _find_deferred_devices(config, mode=mode)
 
     if load_pass == "auto":
         # Find the highest load order in the config
@@ -149,11 +156,12 @@ def loadFromConfig(
             namespace,
             **kwargs,
         )
+        
         if alias:
             _handle_aliases(
                 load_pass, config, device_dict, group_dict, role_dict, namespace
             )
-
+        
     return device_dict, group_dict, role_dict
 
 

@@ -47,7 +47,10 @@ class BeamlineModel:
         # First load the mode controller if it exists
         if "mode" in roles:
             self.mode = devices[roles["mode"]]
-            print(f"Loaded mode controller: {self.mode.name}")
+            if self.mode is not None:
+                print(f"Loaded mode controller: {self.mode.name}")
+            else:
+                print(f"No mode controller found")
 
         # Then load all other devices
         self.devices.update(devices)
