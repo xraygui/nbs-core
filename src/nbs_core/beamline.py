@@ -11,9 +11,34 @@ class BeamlineModel:
         "mirrors",
         "controllers",
         "vacuum",
+        "source",
         "misc",
     ]
 
+    default_roles = [
+        "beam_current",
+        "beam_status",
+        "default_shutter",
+        "energy",
+        "intensity_detector",
+        "primary_sampleholder",
+        "reference_sampleholder",
+        "mode",
+        "slits",
+    ]
+
+    reserved = [
+        "current_sample",
+        "samples",
+        "config",
+        "groups",
+        "roles",
+        "supplemental_data",
+        "devices",
+        "redis",
+        "RE",
+        "md",
+    ]
     def __init__(self, devices, groups, roles, *args, **kwargs):
         super().__init__(
             *args, **kwargs
@@ -23,7 +48,7 @@ class BeamlineModel:
         self.primary_manipulator = None
         self.default_shutter = None
         self.groups = list(self.default_groups)
-        self.roles = ["energy", "primary_manipulator", "default_shutter"]
+        self.roles = list(self.default_roles)
         self.mode = None
 
         # Initialize empty dictionaries for each default group
