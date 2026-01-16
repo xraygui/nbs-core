@@ -48,7 +48,7 @@ class BeamlineModel:
         self.primary_manipulator = None
         self.default_shutter = None
         self.groups = list(self.default_groups)
-        self.roles = list(self.default_roles)
+        self.roles = []
         self.mode = None
 
         # Initialize empty dictionaries for each default group
