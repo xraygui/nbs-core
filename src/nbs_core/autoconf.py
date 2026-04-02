@@ -1,4 +1,5 @@
 from copy import deepcopy
+from os.path import join, dirname, basename, exists
 try:
     import tomllib
 except ModuleNotFoundError:
@@ -38,13 +39,11 @@ def replace_target_values(data, translation_dict, default_target=None):
 
 
 def generate_device_config(
-    device_file, update_file=None, translation_dict=None, default_target=None
+    device_file, update_file=None, translation_dict=None, default_target=None, sim_mode=False
 ):
-    with open(device_file, "rb") as f:
-        device_config = tomllib.load(f)
+    device_config = load_settings(device_file, sim_mode=sim_mode)
     if update_file is not None:
-        with open(update_file, "rb") as f:
-            update_config = tomllib.load(f)
+        update_config = load_settings(update_file, sim_mode=sim_mode)
     else:
         update_config = {}
     translation_updates = {}
@@ -58,3 +57,80 @@ def generate_device_config(
         new_dev_config[key].update(update)
 
     return new_dev_config
+
+
+_MERGE_MODE_KEY = "__merge__"
+_MERGE_MODE_REPLACE = "replace"
+_OVERLAY_REMOVE_KEY = "_remove"
+
+
+def _deep_merge_dict(base, overlay):
+    """
+    Merge ``overlay`` into ``base`` in place.
+
+    Mapping values are merged recursively unless the overlay value is a dict
+    with ``__merge__ = "replace"``, in which case the existing subtree is
+    replaced by the rest of that dict (directive keys are not kept).
+
+    Any non-dict overlay value replaces the corresponding key in ``base``.
+    If types disagree (e.g. mapping in base, scalar in overlay), the overlay
+    wins.
+
+    Overlay directives (only ``_remove`` is recognized at the current level):
+
+    * ``_remove``: after other keys are applied, each name in this list is
+      popped from ``base`` at this level. Must be a list.
+
+    Parameters
+    ----------
+    base : dict
+        Dictionary to update.
+    overlay : dict
+        Keys and values applied on top of ``base``.
+
+    Returns
+    -------
+    dict
+        ``base`` (same object), updated.
+    """
+    deferred_remove = None
+    for key, value in overlay.items():
+        if key == _OVERLAY_REMOVE_KEY:
+            deferred_remove = value
+            continue
+        if (
+            isinstance(value, dict)
+            and value.get(_MERGE_MODE_KEY) == _MERGE_MODE_REPLACE
+        ):
+            branch = deepcopy(value)
+            branch.pop(_MERGE_MODE_KEY, None)
+            branch.pop(_OVERLAY_REMOVE_KEY, None)
+            base[key] = branch
+            continue
+        if (
+            key in base
+            and isinstance(base[key], dict)
+            and isinstance(value, dict)
+        ):
+            _deep_merge_dict(base[key], value)
+        else:
+            base[key] = deepcopy(value)
+
+    if isinstance(deferred_remove, list):
+        for k in deferred_remove:
+            base.pop(k, None)
+
+    return base
+
+
+def load_settings(settings_file, sim_mode=False):
+    with open(settings_file, "rb") as f:
+        settings_config = tomllib.load(f)
+
+    if sim_mode:
+        sim_file = join(dirname(settings_file), basename(settings_file).replace(".toml", "_sim.toml"))
+        if exists(sim_file):
+            with open(sim_file, "rb") as f:
+                sim_config = tomllib.load(f)
+            _deep_merge_dict(settings_config, sim_config)
+    return settings_config
