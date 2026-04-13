@@ -119,7 +119,7 @@ def loadFromConfig(
     device_dict = {}
     group_dict = {}
     role_dict = {}
-    print("Loading devices from config dictionary")
+    # print("Loading devices from config dictionary")
     # Handle deferred devices if filtering is enabled
     if filter_deferred:
         _, config, _ = _find_deferred_devices(config, mode=mode)
@@ -127,7 +127,7 @@ def loadFromConfig(
     if load_pass == "auto":
         # Find the highest load order in the config
         max_load_order = getMaxLoadPass(config)
-        print(f"Number of load passes: {max_load_order}")
+        #print(f"Number of load passes: {max_load_order}")
         # Load each pass sequentially
         for current_pass in range(1, max_load_order + 1):
             _load_single_pass(
@@ -176,7 +176,7 @@ def _load_single_pass(
     **kwargs,
 ):
     """Helper function to load a single pass of devices"""
-    print(f"Loading devices from config dictionary for pass {load_pass}")
+    # print(f"Loading devices from config dictionary for pass {load_pass}")
     for device_key, device_info in config.items():
         if device_info.get("_load_order", 1) != load_pass:
             continue
@@ -184,7 +184,7 @@ def _load_single_pass(
         if device_info.get("_defer_loading", False):
             continue
         if device_info.get("_target", "IGNORE") != "IGNORE":
-            print(f"Loading device {device_key}")
+            # print(f"Loading device {device_key}")
             device_dict[device_key] = instantiateDevice(
                 device_key, device_info, namespace=namespace, **kwargs
             )
@@ -204,7 +204,7 @@ def _handle_aliases(load_pass, config, device_dict, group_dict, role_dict, names
             continue
         if "_alias" in device_info:
             device_key = device_info["_alias"]
-            print(f"Trying to alias {device_key} to {alias_key}")
+            # print(f"Trying to alias {device_key} to {alias_key}")
             device_names = device_key.split(".")
             if device_names[0] in device_dict:
                 device = device_dict[device_names[0]]
