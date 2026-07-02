@@ -23,6 +23,8 @@ def _find_deferred_devices(config, mode=None):
     """
     deferred_devices = set()
 
+    if mode is not None:
+        mode = set(iterfy(mode))
     # First find explicitly deferred devices
     for key, device_config in config.items():
         if isinstance(device_config, dict) and device_config.get(
@@ -30,10 +32,11 @@ def _find_deferred_devices(config, mode=None):
         ):
             deferred_devices.add(key)
         elif mode is not None:
-            device_modes = device_config.get("_modes", [mode])
-            if mode not in device_modes:
-                deferred_devices.add(key)
-
+            device_modes_list = device_config.get("_modes", [])
+            if device_modes_list:
+                device_modes = set(iterfy(device_modes_list))
+                if not device_modes.intersection(mode):
+                    deferred_devices.add(key)
     # Then find aliases of deferred devices
     for key, device_config in config.items():
         if isinstance(device_config, dict) and "_alias" in device_config:
